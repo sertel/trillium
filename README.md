@@ -14,54 +14,24 @@ mechanized in the [Coq proof assistant](https://coq.inria.fr/).
   + [`heap_lang/`](fairis/heap_lang/): HeapLang instantiation with fuel model
     * [`examples/`](fairis/heap_lang/examples/): Examples and case studies
 
-- [`external/`](external/): External dependencies
-
 ## Compiling
 
-The project maintains compatibility with Coq 8.17 and relies on `coqc` being
-available in your shell. Clone the external git submodule dependencies using
+`trillium` is a Nix flake and as such you can
+- run `nix build` to build `trillium`,
+- run `nix develop` to enter a development shell with all dependencies available to develop `trillium` or
+- load `trillium` as a flake input to use it as a library (see the flake in [Aneris](https://github.com/logsem/aneris/blob/master/flake.nix) as an example). 
 
-    git submodule update --init --recursive
+### Nix installation
 
-Alternatively, clone the repository using the `--recurse-submodules` flag.
+This is performed only once.
+1. [Install Nix](https://nix.dev/install-nix.html) with `curl -L https://nixos.org/nix/install | sh -s -- --daemon`
+2. Enable [flake support](https://nixos.wiki/wiki/Flakes) with `mkdir -p ~/.config/nix && echo -e "experimental-features = nix-command flakes" >> ~/.config/nix/nix.conf`
+All set.
 
-Run `make -jN` to build the full development, where `N` is the number of your
-CPU cores.
-
-Note that the compilation of the external dependencies is known to print
-a lot of warning messages when compiled with Coq 8.17.
-
-## Git submodule dependencies
-
-This project uses git submodules to manage dependencies with other Coq
-libraries. By default, when working with a repository that uses submodules, the
-submodules will *not* be populated and updated automatically, and it is often
-necessary to invoke `git submodule update --init --recursive` or use the
-`--recurse-submodules` flag. However, this can be automated by setting the
-`submodule.recurse` setting to `true` in your git config by running
-
-    git config --global submodule.recurse true
-
-This will make `git clone`, `git checkout`, `git pull`, etc. work as you would
-expect and it should rarely be necessary to invoke any `git submodule update`
-commands.
-
-A git submodule is pinned to a particular commit of an external (remote)
-repository. If new commits have been pushed to the remote repository and you
-wish to integrate these in to the development, invoke
-
-    git submodule update --remote
-
-to fetch the new commits and apply them to your local repository. This changes
-which commit your *local* submodule is pinned to. Remember to commit and push
-the submodule update to make it visible to other users of the repository.
-
-Read more about git submodules in [this
-tutorial](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
 
 ## Publications
 
-A [preprint](https://iris-project.org/pdfs/2021-submitted-trillium.pdf) is
+The [POPL 2024 paper](https://iris-project.org/pdfs/2024-popl-trillium.pdf) is
 available describing Trillium, a program logic framework for both proving
-partial correctness properties and trace properties; Aneris is now an
-instantiation of the Trillium framework.
+partial correctness properties and trace properties; [Aneris](https://github.com/logsem/aneris) 
+is now an instantiation of the Trillium framework.
