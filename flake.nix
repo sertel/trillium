@@ -9,7 +9,18 @@
       pname = "tillium";
       propagatedBuildInputs = [ stdpp iris paco ];
       defaultVersion = "0.0.1";
-      installPhase = '' '';
+      installPhase = ''
+        runHook preInstall
+        PREFIX=$out/lib/coq/${coq.coq-version}/user-contrib
+        find trillium -name '*.vo*' | while read -r f; do
+          d=''${f%/*}
+          k=''${f##*/}
+          if [ "$f" = "$d" ]; then d=. ; fi
+          mkdir -p -- "$PREFIX/$d"
+          cp -p -- "$f" "$PREFIX/$f"
+        done
+        runHook postInstall
+      '';
       release."0.0.1" = {
         src = lib.const (lib.cleanSourceWith {
           src = lib.cleanSource ./.;
