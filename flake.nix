@@ -1,29 +1,52 @@
 {
-  description = "A devShell example";
-
   inputs = {
-    nixpkgs.url      = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url  = "github:numtide/flake-utils";
-    # coq-lsp = { type = "git"; url = "https://github.com/ejgallego/coq-lsp.git"; submodules = true; };
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.05";
+    flake-utils.url = "github:numtide/flake-utils";
   };
+  outputs = { self, nixpkgs, flake-utils, ... }: let
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
-      in
-      with pkgs;
-      {
-        devShell = mkShell rec {
-          buildInputs = with coqPackages_8_17; [
-            coq
+    trillium = { lib, mkCoqDerivation, coq, stdpp, iris, paco }: mkCoqDerivation rec {
+      pname = "tillium";
+      propagatedBuildInputs = [ stdpp iris paco ];
+      defaultVersion = "0.0.1";
+      installPhase = '' '';
+      release."0.0.1" = {
+        src = lib.const (lib.cleanSourceWith {
+          src = lib.cleanSource ./.;
+          filter = let inherit (lib) hasSuffix; in path: type:
+            (! hasSuffix ".gitignore" path)
+            && (! hasSuffix "flake.nix" path)
+            && (! hasSuffix "flake.lock" path)
+            && (! hasSuffix "_build" path);
+        });
+      };
+    };
 
-          # coq-lsp.packages.${system}.coq-lsp
-          ];
-        };
-      }
-      );
-  }
+  in flake-utils.lib.eachDefaultSystem (system: let
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = [ self.overlays.default ];
+    };
+  in {
+    devShells = {
+      trillium = self.packages.${system}.trillium;
+      default = self.packages.${system}.trillium;
+    };
+
+    packages = {
+      trillium = pkgs.coqPackages_8_19.trillium;
+      default = self.packages.${system}.trillium;
+    };
+  }) // {
+    # NOTE: To use this flake, apply the following overlay to nixpkgs and use
+    # the injected package from its respective coqPackages_VER attribute set!
+    overlays.default = final: prev: let
+      injectPkg = name: set:
+        prev.${name}.overrideScope (self: _: {
+          trillium = self.callPackage trillium {};
+        });
+    in (nixpkgs.lib.mapAttrs injectPkg {
+      inherit (final) coqPackages_8_19;
+    });
+  };
+}
